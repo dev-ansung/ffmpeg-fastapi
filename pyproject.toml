@@ -1,0 +1,36 @@
+[project]
+name = "ffmpeg-fastapi"
+version = "0.1.0"
+description = "Zero-install FastAPI service for fast ffmpeg-based media transforms"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "python-multipart>=0.0.12",
+    "jinja2>=3.1",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+]
+
+[project.scripts]
+ffmpeg-fastapi = "ffmpeg_fastapi.__main__:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.27",
+    "asgi-lifespan>=2.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ffmpeg_fastapi"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

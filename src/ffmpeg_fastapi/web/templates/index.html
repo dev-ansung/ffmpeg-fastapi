@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ffmpeg-fastapi</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="min-h-screen bg-base-200 p-6">
+  <div class="max-w-2xl mx-auto flex flex-col gap-6">
+    <h1 class="text-2xl font-bold">ffmpeg-fastapi</h1>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Video sprite sheet</h2>
+        <form id="sprite-form" class="flex flex-col gap-3">
+          <input type="file" name="video" accept="video/*" required class="file-input file-input-bordered w-full">
+          <div class="grid grid-cols-3 gap-3">
+            <label class="form-control">
+              <div class="label"><span class="label-text">Rows</span></div>
+              <input type="number" name="rows" value="4" min="1" max="32" required class="input input-bordered">
+            </label>
+            <label class="form-control">
+              <div class="label"><span class="label-text">Columns</span></div>
+              <input type="number" name="cols" value="4" min="1" max="32" required class="input input-bordered">
+            </label>
+            <label class="form-control">
+              <div class="label"><span class="label-text">Width (px)</span></div>
+              <input type="number" name="width" value="1280" min="1" required class="input input-bordered">
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">Generate sprite sheet</button>
+        </form>
+        <div class="job-status mt-3"></div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Images to video</h2>
+        <form id="images_to_video-form" class="flex flex-col gap-3">
+          <input type="file" name="images" accept="image/*" multiple required class="file-input file-input-bordered w-full">
+          <div class="flex gap-4">
+            <label class="label cursor-pointer gap-2">
+              <span class="label-text">Mirror blur</span>
+              <input type="checkbox" name="mirror_blur" value="true" class="checkbox">
+            </label>
+            <label class="label cursor-pointer gap-2">
+              <span class="label-text">Transition</span>
+              <input type="checkbox" name="transition" value="true" class="checkbox">
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="form-control">
+              <div class="label"><span class="label-text">Width (px)</span></div>
+              <input type="number" name="width" value="1280" min="1" required class="input input-bordered">
+            </label>
+            <label class="form-control">
+              <div class="label"><span class="label-text">Aspect ratio</span></div>
+              <input type="text" name="aspect_ratio" value="16:9" required class="input input-bordered">
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">Generate video</button>
+        </form>
+        <div class="job-status mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
