@@ -1,3 +1,4 @@
+from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -7,9 +8,21 @@ IMAGE_DURATION = 2.0
 TRANSITION_DURATION = 0.5
 
 
+class TransitionType(StrEnum):
+    NONE = "none"
+    FADE = "fade"
+    DIFFUSE = "diffuse"
+
+
+_XFADE_TRANSITION_NAMES = {
+    TransitionType.FADE: "fade",
+    TransitionType.DIFFUSE: "dissolve",
+}
+
+
 class ImagesToVideoParams(BaseModel):
     mirror_blur: bool = False
-    transition: bool = False
+    transition: TransitionType = TransitionType.NONE
     width: int = Field(gt=0, le=8192)
     aspect_ratio: str = "16:9"
 
@@ -28,7 +41,7 @@ class ImagesToVideoFeature:
     def parse_params(self, form: FormData) -> ImagesToVideoParams:
         return ImagesToVideoParams(
             mirror_blur=form.get("mirror_blur") == "true",
-            transition=form.get("transition") == "true",
+            transition=TransitionType(form.get("transition", TransitionType.NONE)),
             width=int(form["width"]),
             aspect_ratio=str(form.get("aspect_ratio", "16:9")),
         )
@@ -41,12 +54,6 @@ class ImagesToVideoFeature:
         self, inputs: list[Path], params: ImagesToVideoParams, output_path: Path
     ) -> list[str]:
         width, height = params.width, params.height
-        list_path = inputs[0].parent / "concat_list.txt"
-        lines = []
-        for image in inputs:
-            lines.append(f"file '{image.name}'")
-            lines.append(f"duration {IMAGE_DURATION}")
-        list_path.write_text("\n".join(lines))
 
         if params.mirror_blur:
             frame_filter = (
@@ -62,20 +69,39 @@ class ImagesToVideoFeature:
                 f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1"
             )
 
-        vf = f"{frame_filter},fps=25"
-        if params.transition and len(inputs) > 1:
-            # Simple fade-in/fade-out per image approximates a crossfade without
-            # requiring a per-pair xfade filtergraph across an arbitrary N images.
-            vf += (
-                f",fade=t=in:st=0:d={TRANSITION_DURATION},"
-                f"fade=t=out:st={IMAGE_DURATION - TRANSITION_DURATION}:d={TRANSITION_DURATION}"
-            )
+        input_args = []
+        for image in inputs:
+            input_args += ["-loop", "1", "-t", str(IMAGE_DURATION), "-i", str(image)]
+
+        filter_parts = []
+        for i in range(len(inputs)):
+            filter_parts.append(f"[{i}:v]{frame_filter},fps=25[v{i}]")
+
+        use_xfade = params.transition != TransitionType.NONE and len(inputs) > 1
+        if use_xfade:
+            xfade_name = _XFADE_TRANSITION_NAMES[params.transition]
+            current_label = "v0"
+            elapsed = IMAGE_DURATION
+            last_index = len(inputs) - 1
+            for i in range(1, len(inputs)):
+                out_label = "outv" if i == last_index else f"x{i}"
+                offset = elapsed - TRANSITION_DURATION
+                filter_parts.append(
+                    f"[{current_label}][v{i}]xfade=transition={xfade_name}:"
+                    f"duration={TRANSITION_DURATION}:offset={offset}[{out_label}]"
+                )
+                current_label = out_label
+                elapsed += IMAGE_DURATION - TRANSITION_DURATION
+        else:
+            labels = "".join(f"[v{i}]" for i in range(len(inputs)))
+            filter_parts.append(f"{labels}concat=n={len(inputs)}:v=1:a=0[outv]")
+
+        filter_complex = ";".join(filter_parts)
 
         return [
-            "-f", "concat",
-            "-safe", "0",
-            "-i", str(list_path),
-            "-vf", vf,
+            *input_args,
+            "-filter_complex", filter_complex,
+            "-map", "[outv]",
             "-c:v", "libx264",
             "-pix_fmt", "yuv420p",
             "-movflags", "+faststart",

@@ -54,7 +54,7 @@ async def test_images_to_video_job_end_to_end(client, sample_images):
     try:
         res = await client.post(
             "/api/jobs/images_to_video",
-            data={"width": "320", "aspect_ratio": "4:3", "mirror_blur": "true", "transition": "false"},
+            data={"width": "320", "aspect_ratio": "4:3", "mirror_blur": "true", "transition": "none"},
             files=files,
         )
     finally:

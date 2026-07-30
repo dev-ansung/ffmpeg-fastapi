@@ -35,7 +35,7 @@ Generates a single static image (jpg) tiling evenly-sampled thumbnails from a vi
 Combines a sequence of images into an mp4 video.
 
 - **Input**: image files
-- **Parameters**: enable mirror blur (blurred background fill for mismatched aspect ratios), enable transition (crossfade between images), output video width, aspect ratio
+- **Parameters**: enable mirror blur (blurred background fill for mismatched aspect ratios), transition type (`none`, `fade`, or `diffuse` crossfade between images), output video width, aspect ratio
 - **Output**: mp4 video
 
 ## API
